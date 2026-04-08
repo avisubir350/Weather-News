@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Live Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --glass: rgba(255,255,255,0.08);
+      --glass-border: rgba(255,255,255,0.15);
+      --accent: #6c63ff;
+      --accent2: #f7971e;
+      --text: #e8eaf6;
+      --muted: rgba(255,255,255,0.5);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: var(--text);
+      padding: 20px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #a78bfa, #f7971e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    #clock {
+      font-size: 0.95rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
+    /* ── Search bar ── */
+    .search-bar {
+      display: flex;
+      gap: 8px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 50px;
+      padding: 6px 6px 6px 16px;
+      backdrop-filter: blur(10px);
+    }
+    .search-bar input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 0.9rem;
+      width: 160px;
+    }
+    .search-bar input::placeholder { color: var(--muted); }
+    .search-bar button {
+      background: var(--accent);
+      border: none;
+      border-radius: 50px;
+      padding: 6px 16px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: opacity .2s;
+    }
+    .search-bar button:hover { opacity: .85; }
+
+    /* ── Grid layout ── */
+    .grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    /* ── Glass card ── */
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 24px;
+      backdrop-filter: blur(16px);
+    }
+
+    /* ── Weather panel ── */
+    #weather-panel { display: flex; flex-direction: column; gap: 20px; }
+
+    .weather-main {
+      text-align: center;
+    }
+    .weather-main .city-name {
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+    .weather-main .country { color: var(--muted); font-size: 0.85rem; }
+    .weather-main img { width: 90px; height: 90px; filter: drop-shadow(0 0 12px rgba(108,99,255,.6)); }
+    .weather-main .temp {
+      font-size: 4rem;
+      font-weight: 700;
+      line-height: 1;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .weather-main .desc { color: var(--muted); font-size: 1rem; margin-top: 4px; }
+
+    .weather-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .stat {
+      background: rgba(255,255,255,0.05);
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+    }
+    .stat .label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .stat .value { font-size: 1.3rem; font-weight: 600; margin-top: 4px; }
+
+    /* Forecast */
+    .forecast-title { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .forecast-list { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+    .forecast-list::-webkit-scrollbar { height: 4px; }
+    .forecast-list::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
+    .forecast-item {
+      flex: 0 0 auto;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 10px 14px;
+      text-align: center;
+      min-width: 70px;
+    }
+    .forecast-item .f-time { font-size: 0.7rem; color: var(--muted); }
+    .forecast-item img { width: 36px; height: 36px; }
+    .forecast-item .f-temp { font-size: 0.95rem; font-weight: 600; }
+
+    /* ── News panel ── */
+    #news-panel { display: flex; flex-direction: column; gap: 16px; }
+
+    .news-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .tab {
+      padding: 6px 16px;
+      border-radius: 50px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 500;
+      transition: all .2s;
+    }
+    .tab.active, .tab:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+      max-height: 72vh;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .news-grid::-webkit-scrollbar { width: 4px; }
+    .news-grid::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
+
+    .news-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+    }
+    .news-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(108,99,255,.25);
+    }
+    .news-card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+    }
+    .news-card .no-img {
+      width: 100%;
+      height: 140px;
+      background: linear-gradient(135deg, #302b63, #24243e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+    .news-card .news-body { padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .news-card .news-source {
+      font-size: 0.7rem;
+      color: var(--accent2);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .news-card .news-title { font-size: 0.88rem; font-weight: 500; line-height: 1.4; }
+    .news-card .news-date { font-size: 0.72rem; color: var(--muted); margin-top: auto; }
+
+    /* ── Loading / Error ── */
+    .loading { text-align: center; color: var(--muted); padding: 40px; }
+    .error-msg { color: #f87171; font-size: 0.9rem; text-align: center; padding: 20px; }
+
+    /* ── Refresh badge ── */
+    .refresh-badge {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: right;
+      margin-top: -8px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🌐 Live Dashboard</h1>
+  <div id="clock"></div>
+  <div class="search-bar">
+    <input type="text" id="city-input" placeholder="Search city..." value="{{ default_city }}"/>
+    <button onclick="loadWeather()">Search</button>
+  </div>
+</header>
+
+<div class="grid">
+  <!-- Weather -->
+  <div id="weather-panel">
+    <div class="card" id="weather-main-card">
+      <div class="loading">Loading weather...</div>
+    </div>
+    <div class="card" id="weather-stats-card" style="display:none">
+      <div class="weather-stats" id="weather-stats"></div>
+    </div>
+    <div class="card" id="forecast-card" style="display:none">
+      <div class="forecast-title">Upcoming 6-Hour Forecast</div>
+      <div class="forecast-list" id="forecast-list"></div>
+    </div>
+    <div class="refresh-badge" id="weather-refresh"></div>
+  </div>
+
+  <!-- News -->
+  <div id="news-panel">
+    <div class="card" style="padding:16px 20px">
+      <div class="news-tabs" id="news-tabs">
+        <div class="tab active" onclick="loadNews('general', this)">General</div>
+        <div class="tab" onclick="loadNews('technology', this)">Technology</div>
+        <div class="tab" onclick="loadNews('science', this)">Science</div>
+        <div class="tab" onclick="loadNews('health', this)">Health</div>
+        <div class="tab" onclick="loadNews('sports', this)">Sports</div>
+        <div class="tab" onclick="loadNews('entertainment', this)">Entertainment</div>
+        <div class="tab" onclick="loadNews('business', this)">Business</div>
+      </div>
+    </div>
+    <div class="news-grid" id="news-grid">
+      <div class="loading">Loading news...</div>
+    </div>
+    <div class="refresh-badge" id="news-refresh"></div>
+  </div>
+</div>
+
+<script>
+  // ── Clock ──
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) +
+      '  ' + now.toLocaleTimeString();
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // ── Weather ──
+  async function loadWeather() {
+    const city = document.getElementById('city-input').value.trim() || '{{ default_city }}';
+    document.getElementById('weather-main-card').innerHTML = '<div class="loading">Loading weather...</div>';
+    document.getElementById('weather-stats-card').style.display = 'none';
+    document.getElementById('forecast-card').style.display = 'none';
+
+    try {
+      const res = await fetch(`/api/weather?city=${encodeURIComponent(city)}`);
+      const data = await res.json();
+
+      if (data.error) {
+        document.getElementById('weather-main-card').innerHTML = `<div class="error-msg">⚠️ ${data.error}</div>`;
+        return;
+      }
+
+      // Main card
+      document.getElementById('weather-main-card').innerHTML = `
+        <div class="weather-main">
+          <div class="city-name">${data.city}</div>
+          <div class="country">${data.country}</div>
+          <div style="font-size:5rem;line-height:1.2">${data.icon}</div>
+          <div class="temp">${data.temp}°C</div>
+          <div class="desc">${data.description}</div>
+        </div>`;
+
+      // Stats
+      document.getElementById('weather-stats').innerHTML = `
+        <div class="stat"><div class="label">Feels Like</div><div class="value">${data.feels_like}°C</div></div>
+        <div class="stat"><div class="label">Humidity</div><div class="value">${data.humidity}%</div></div>
+        <div class="stat"><div class="label">Wind</div><div class="value">${data.wind} km/h</div></div>
+        <div class="stat"><div class="label">Pressure</div><div class="value">${data.pressure} hPa</div></div>
+        <div class="stat"><div class="label">Visibility</div><div class="value">${data.visibility} km</div></div>`;
+      document.getElementById('weather-stats-card').style.display = 'block';
+
+      // Forecast
+      const forecastHTML = data.forecast.map(f => `
+        <div class="forecast-item">
+          <div class="f-time">${f.time}</div>
+          <div style="font-size:1.8rem">${f.icon}</div>
+          <div class="f-temp">${f.temp}°</div>
+        </div>`).join('');
+      document.getElementById('forecast-list').innerHTML = forecastHTML;
+      document.getElementById('forecast-card').style.display = 'block';
+
+      document.getElementById('weather-refresh').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+    } catch (e) {
+      document.getElementById('weather-main-card').innerHTML = '<div class="error-msg">⚠️ Failed to load weather.</div>';
+    }
+  }
+
+  // ── News ──
+  let currentCategory = 'general';
+
+  async function loadNews(category, tabEl) {
+    currentCategory = category;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    if (tabEl) tabEl.classList.add('active');
+
+    document.getElementById('news-grid').innerHTML = '<div class="loading">Loading news...</div>';
+
+    try {
+      const res = await fetch(`/api/news?category=${category}`);
+      const data = await res.json();
+
+      if (data.error) {
+        document.getElementById('news-grid').innerHTML = `<div class="error-msg">⚠️ ${data.error}</div>`;
+        return;
+      }
+
+      const icons = { general:'📰', technology:'💻', science:'🔬', health:'🏥', sports:'⚽', entertainment:'🎬', business:'💼' };
+
+      const html = data.articles.map(a => `
+        <a class="news-card" href="${a.url}" target="_blank" rel="noopener">
+          ${a.image
+            ? `<img src="${a.image}" alt="${a.title}" onerror="this.parentElement.querySelector('.no-img') && (this.style.display='none'); this.outerHTML='<div class=\\'no-img\\'>${icons[category]||'📰'}</div>'">`
+            : `<div class="no-img">${icons[category]||'📰'}</div>`}
+          <div class="news-body">
+            <div class="news-source">${a.source}</div>
+            <div class="news-title">${a.title}</div>
+            <div class="news-date">${a.published}</div>
+          </div>
+        </a>`).join('');
+
+      document.getElementById('news-grid').innerHTML = html || '<div class="loading">No articles found.</div>';
+      document.getElementById('news-refresh').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+    } catch (e) {
+      document.getElementById('news-grid').innerHTML = '<div class="error-msg">⚠️ Failed to load news.</div>';
+    }
+  }
+
+  // ── Auto-refresh every 5 minutes ──
+  setInterval(() => {
+    loadWeather();
+    loadNews(currentCategory, null);
+  }, 5 * 60 * 1000);
+
+  // ── Enter key on city input ──
+  document.getElementById('city-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') loadWeather();
+  });
+
+  // ── Initial load ──
+  loadWeather();
+  loadNews('general', document.querySelector('.tab.active'));
+</script>
+</body>
+</html>
