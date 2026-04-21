@@ -30,7 +30,7 @@ jobs:
           pip install pytest pytest-cov
       # 4. Dependencies Check
       - name: OWASP dependencies
-        uses: dependency-check/Dependency-Check_Action@develop
+        uses: dependency-check/Dependency-Check_Action@main
         with:
           project: "Stagging CI pipeline"
           path: "./"
