@@ -1,100 +1,47 @@
-# 🌐 Live Weather & News Dashboard
+# Weather News Dashboard
 
-A beautiful real-time dashboard built with Python (Flask) showing live weather and Indian news — built as a college project.
-
----
+A Python-based weather and news dashboard application.
 
 ## Features
 
-- 🌤️ Live weather with temperature, feels like, humidity, wind, pressure, visibility
-- ⏱️ Upcoming 6-hour hourly forecast
-- 📰 Live Indian news with 7 category tabs (General, Technology, Science, Health, Sports, Entertainment, Business)
-- 🔍 City search bar
-- 🔄 Auto-refreshes every 5 minutes
-- 🎨 Glassmorphism dark UI
+- Weather data integration
+- News feed aggregation
+- Dashboard interface
 
----
-
-## Tech Stack
-
-| Layer    | Technology                                              |
-|----------|---------------------------------------------------------|
-| Backend  | Python, Flask                                           |
-| Weather  | [Open-Meteo API](https://open-meteo.com/) *(no key needed)* |
-| News     | [NewsAPI.org](https://newsapi.org/)                     |
-| Frontend | HTML, CSS, Vanilla JavaScript                           |
-
----
-
-## Project Structure
-
-```
-weather-news-dashboard/
-├── app.py              # Flask backend & API routes
-├── .env                # API keys and config
-├── requirements.txt    # Python dependencies
-└── templates/
-    └── index.html      # Dashboard UI
-```
-
----
-
-## Setup & Installation
-
-### 1. Clone or download the project
-
-```bash
-cd weather-news-dashboard
-```
-
-### 2. Create a virtual environment
-
-```bash
-python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # Mac/Linux
-```
-
-### 3. Install dependencies
+## Installation
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure `.env`
-
-```env
-WEATHER_API_KEY=not_required   # Open-Meteo needs no key
-NEWS_API_KEY=your_newsapi_org_key_here
-DEFAULT_CITY=Kolkata
-```
-
-Get your free NewsAPI key at [newsapi.org/register](https://newsapi.org/register).
-
-### 5. Run the app
+## Usage
 
 ```bash
 python app.py
 ```
 
-Open your browser at `http://127.0.0.1:5000`
+## CI/CD Pipeline
 
----
+The project uses GitHub Actions with self-hosted runners for:
+- Python testing with pytest
+- OWASP dependency scanning
+- SonarQube code analysis
+- Docker build and push
+- GitOps deployment
 
-## API Sources
+## Conclusion
 
-- **Weather** — [Open-Meteo](https://open-meteo.com/) — free, no API key required
-- **News** — [NewsAPI.org](https://newsapi.org/) — free developer tier, 100 requests/day
+This weather and news dashboard provides a centralized platform for accessing real-time weather information and news updates. The application demonstrates modern DevOps practices with automated CI/CD pipelines, security scanning, and containerized deployment.
 
----
-## cd "/mnt/c/users/user/desktop/weather&news/weather-news-dashboard" && source venv/bin/activate && python app.py
+## Future Features
 
-## Screenshots
-
-> Add screenshots of your dashboard here for the college submission.
-
----
-
-## Author
-
-Made with ❤️ for college project.
+- [ ] Real-time weather alerts and notifications
+- [ ] Customizable news source filtering
+- [ ] Mobile-responsive design improvements
+- [ ] User authentication and personalized dashboards
+- [ ] Weather forecast predictions with ML models
+- [ ] Integration with additional news APIs
+- [ ] Dark/light theme toggle
+- [ ] Export functionality for weather data
+- [ ] Geolocation-based automatic weather updates
+- [ ] Social sharing capabilities
