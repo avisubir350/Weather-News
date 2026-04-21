@@ -1,4 +1,4 @@
-name: Staging CI pipeline
+name: Staging CI Pipeline
 
 on:
   push:
@@ -7,72 +7,134 @@ on:
     branches: [ develop ]
 
 jobs:
-  continuous-integration:
+
+  # ── Job 1: Lint, Test & OWASP ─────────────────────────────────────────────
+  lint-and-test:
     runs-on: self-hosted
     steps:
-      # 1. Checkout the code
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # needed for sonarqube scanner
+          fetch-depth: 0  # full history needed for SonarQube blame data
 
-
-      # 2. Setup Python
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.12'
+          cache: 'pip'
 
-      # 3. Install dependencies
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-cov
-      # 4. Dependencies Check
-      - name: OWASP dependencies
+          pip install pytest pytest-cov flake8
+
+      - name: Lint with flake8
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-line-length=127 --statistics
+
+      - name: Run Unit Tests with coverage
+        run: |
+          pytest --cov=. --cov-report=xml:coverage.xml --cov-report=term-missing
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+      - name: OWASP Dependency Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
-          project: "Stagging CI pipeline"
+          project: "weather-news-dashboard"
           path: "./"
           format: "ALL"
           output: "dependency-check-report"
-      # 3. SonarQube Scanner
-      - name: SonarQube Scanner
-        uses: sonarsource/sonarcloud-github-action@master
+
+      - name: Upload OWASP report
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-report
+          path: dependency-check-report/
+
+  # ── Job 2: SonarQube Scan ─────────────────────────────────────────────────
+  sonarqube-scan:
+    runs-on: self-hosted
+    needs: lint-and-test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # required for accurate blame & new code detection
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5
         env:
-          GITHUB_SONAR_TOKEN: ${{ secrets.GITHUB_SONAR_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-      # 4. Docker Build
-      - name: Build Docker Image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/github_tool:${{ github.sha }} .
+      # Block pipeline if Quality Gate fails
+      - name: SonarQube Quality Gate check
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-      # 5. Docker Push
-      - name: Push Docker Image
-        run: |
-          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker push ${{ secrets.DOCKER_USERNAME }}/github_tool:${{ github.sha }}
+  # ── Job 3: Build & Push Docker Image ──────────────────────────────────────
+  build-and-push:
+    runs-on: self-hosted
+    needs: sonarqube-scan
+    outputs:
+      image_tag: ${{ steps.vars.outputs.tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
+      - name: Set short git SHA as tag
+        id: vars
+        run: echo "tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: weather-news-dashboard/
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/weather-news-dashboard:latest
+            ${{ secrets.DOCKER_USERNAME }}/weather-news-dashboard:${{ steps.vars.outputs.tag }}
+
+  # ── Job 4: GitOps — Update config repo ────────────────────────────────────
   gitops-update:
-    needs: continuous-integration
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    needs: build-and-push
     if: github.event_name == 'push'
     steps:
-      # 6. Hand-off: Update the separate configuration repository for deployment
       - name: Checkout config repo
         uses: actions/checkout@v4
         with:
           repository: 'avisubir350/config-repo'
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITOPS_TOKEN }}
           path: 'config-repo'
 
       - name: Update Kubernetes manifest
         run: |
           cd config-repo/k8s
-          sed -i "s|image:.*|image: ${{ secrets.DOCKER_USERNAME }}/github_tool:${{ github.sha }}|g" deployment.yaml
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
+          sed -i "s|image:.*|image: ${{ secrets.DOCKER_USERNAME }}/weather-news-dashboard:${{ needs.build-and-push.outputs.image_tag }}|g" deployment.yaml
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "chore: update dev image to ${{ github.sha }} [skip ci]"
+          git commit -m "chore: update image to ${{ needs.build-and-push.outputs.image_tag }} [skip ci]"
           git push origin develop
