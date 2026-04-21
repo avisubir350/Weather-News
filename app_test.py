@@ -3,18 +3,17 @@ from app import app
 
 @pytest.fixture
 def client():
+    """Create a test client for the Flask app."""
     app.config['TESTING'] = True
     with app.test_client() as client:
         yield client
 
-def test_home_page(client):
-    """Test that the home page loads correctly."""
+def test_index_route(client):
+    """Test the main index route."""
     response = client.get('/')
     assert response.status_code == 200
 
 def test_weather_api_route(client):
-    """Test the weather API endpoint (mocking may be needed for external APIs)."""
-    # This assumes you have a route like /weather
-    response = client.get('/weather?city=London')
-    # Even if it fails due to API keys, we check if the route exists
+    """Test the weather API endpoint."""
+    response = client.get('/api/weather?city=London')
     assert response.status_code in [200, 401, 500]
