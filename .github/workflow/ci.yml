@@ -1,4 +1,4 @@
-name: Stagging CI pipeline
+name: Staging CI pipeline
 
 on:
   push:
@@ -16,7 +16,19 @@ jobs:
         with:
           fetch-depth: 0  # needed for sonarqube scanner
 
-      # 2. Dependencies Check
+
+      # 2. Setup Python
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+      # 4. Dependencies Check
       - name: OWASP dependencies
         uses: dependency-check/Dependency-Check_Action@develop
         with:
