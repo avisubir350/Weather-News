@@ -141,7 +141,7 @@ jobs:
       - name: Update Kubernetes manifest
         run: |
           cd weather-config
-          FILE_PATH=$(find . -name "deployment.yaml")
+          FILE_PATH=$(find . -name "deployment.yml")
           sed -i "s|image:.*|image: ${{ secrets.DOCKER_USERNAME }}/weather-news-dashboard:${{ needs.build-and-push.outputs.image_tag }}|g" "$FILE_PATH"
 
           git config --global user.name "github-actions[bot]"
