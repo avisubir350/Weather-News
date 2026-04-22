@@ -136,7 +136,7 @@ jobs:
         with:
           repository: 'avisubir350/weather-config'
           token: ${{ secrets.GITOPS_TOKEN }}
-          path: 'weather-config'
+          path: 'weather-config/Config_k8s'
 
       - name: Update Kubernetes manifest
         run: |
