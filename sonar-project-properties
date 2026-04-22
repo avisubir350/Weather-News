@@ -1,3 +1,5 @@
-sonar.projectKey=Weather-news
-sonar.projectName=Weather-news
-sonar.java.binaries=.
+sonar.projectKey=Weather-News-App
+sonar.projectName=Weather-News
+sonar.sources=.
+sonar.python.version=3
+sonar.python.coverage.reportPaths=coverage.xml
