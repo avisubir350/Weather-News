@@ -142,21 +142,22 @@ jobs:
       - name: Update Kubernetes manifest
         run: |
           cd weather-config
-           # Search for deployment.yml or deployment.yaml case-insensitively
-          FILE_PATH=$(find . -iname "deployment.y*ml" | head -n 1)
           
-          if [ -z "$FILE_PATH" ]; then
-            echo "ERROR: Could not find deployment.yml in the main branch."
-            ls -R
-            exit 1
-          fi
-          
-          echo "Updating: $FILE_PATH"
-          
-          # Replace the image line
-          sed -i "s|image:.*|image: ${{ secrets.DOCKER_USERNAME }}/weather-news-dashboard:${{ needs.build-and-push.outputs.image_tag }}|g" "$FILE_PATH"
+          # 1. Update the image tag in deployment.yml
+          # Using a specific filename since you confirmed it exists in main
+          sed -i "s|image:.*|image: ${{ secrets.DOCKER_USERNAME }}/weather-news-dashboard:${{ needs.build-and-push.outputs.image_tag }}|g" deployment.yml
+
+          # 2. Configure Git
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "chore: update image to ${{ needs.build-and-push.outputs.image_tag }} [skip ci]"
-          git push origin main
+          
+          # 3. Commit and Push specifically to main
+          git add deployment.yml
+          
+          if git diff --staged --quiet; then
+            echo "No changes detected. Skipping push."
+          else
+            git commit -m "chore: update image to ${{ needs.build-and-push.outputs.image_tag }} [skip ci]"
+            # Explicitly push the local 'main' branch to the remote 'main'
+            git push origin main
+          fi
