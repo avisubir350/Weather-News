@@ -1,0 +1,3 @@
+sonar.projectKey=Weather-news
+sonar.projectName=Weather-news
+sonar.java.binaries=.
