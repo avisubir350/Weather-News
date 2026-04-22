@@ -134,13 +134,13 @@ jobs:
       - name: Checkout config repo
         uses: actions/checkout@v4
         with:
-          repository: 'avisubir350/config-repo'
+          repository: 'avisubir350/weather-config'
           token: ${{ secrets.GITOPS_TOKEN }}
-          path: 'config-repo'
+          path: 'weather-config'
 
       - name: Update Kubernetes manifest
         run: |
-          cd config-repo/k8s
+          cd weather-config
           sed -i "s|image:.*|image: ${{ secrets.DOCKER_USERNAME }}/weather-news-dashboard:${{ needs.build-and-push.outputs.image_tag }}|g" deployment.yaml
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
