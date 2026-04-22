@@ -74,14 +74,23 @@ jobs:
           name: coverage-report
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          # Explicitly defining properties here solves the "Unknown Project" error
+          args: >
+            -Dsonar.projectKey=Weather-news
+            -Dsonar.projectName=Weather-news
+            -Dsonar.sources=.
+            -Dsonar.python.version=3
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.exclusions=**/venv/**,**/.git/**,**/__pycache__/**,**/dependency-check-report/**  
 
       # Block pipeline if Quality Gate fails
       - name: SonarQube Quality Gate check
-        uses: SonarSource/sonarqube-quality-gate-action@v1
+        uses: SonarSource/sonarqube-quality-gate-action@v2
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
