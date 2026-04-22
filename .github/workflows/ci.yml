@@ -137,6 +137,7 @@ jobs:
           repository: 'avisubir350/weather-config'
           token: ${{ secrets.GITOPS_TOKEN }}
           path: 'weather-config'
+          ref: 'main' # Fetch the branch where deployment.yml lives
 
       - name: Update Kubernetes manifest
         run: |
