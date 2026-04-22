@@ -119,12 +119,12 @@ jobs:
       - name: Build and Push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: weather-news-dashboard/
+          # FIXED: Context set to "." because your Dockerfile is in the root
+          context: .
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/weather-news-dashboard:latest
             ${{ secrets.DOCKER_USERNAME }}/weather-news-dashboard:${{ steps.vars.outputs.tag }}
-
   # ── Job 4: GitOps — Update config repo ────────────────────────────────────
   gitops-update:
     runs-on: ubuntu-latest
